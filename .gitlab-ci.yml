@@ -15,33 +15,37 @@ cache:
   key: $CI_BUILD_REF_NAME # changed to $CI_COMMIT_REF_NAME in Gitlab 9.x
   paths:
     - vendor
-    - node_modules
+    # - node_modules
     - public
     # - .yarn
 
 
-# test:
-#   stage: test
-#   services:
-#     - mysql:5.7
-#   image: edbizarro/gitlab-ci-pipeline-php:7.1
-#   script:
-#     # - sudo yarn config set cache-folder .yarn
-#     # - yarn install --pure-lockfile
-#     - composer install --prefer-dist --no-ansi --no-interaction --no-progress
-#     - cp .env.example .env
-#     - php artisan key:generate
-#     - php artisan migrate:refresh --seed
-#     - ./vendor/phpunit/phpunit/phpunit -v --coverage-text --colors=never --stderr
-#   artifacts:
-#     paths:
-#       - ./storage/logs # for debugging
-#     expire_in: 1 days
-#     when: always
+test:
+  stage: test
+  services:
+    - mysql:5.7
+  image: edbizarro/gitlab-ci-pipeline-php:7.1
+  script:
+    # - sudo yarn config set cache-folder .yarn
+    # - yarn install --pure-lockfile
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan migrate:refresh --seed
+    - ./vendor/phpunit/phpunit/phpunit -v --coverage-text --colors=never --stderr
+  artifacts:
+    paths:
+      - ./storage/logs # for debugging
+    expire_in: 1 days
+    when: always
 
-deploy:
+deploy_staging:
   stage: deploy
   image: fabeat/php-deployer
+  environment: staging
+  variables:
+    DEPLOY_PATH: /var/www
+    DEPLOY_SERVER: qa.local
   script:
     - echo "$SSH_PRIVATE_KEY" | ssh-add -
     - dep deploy
